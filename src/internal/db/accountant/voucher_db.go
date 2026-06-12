@@ -174,15 +174,15 @@ type VoucherTypeTotals struct {
 // GetCompanyVoucherTotals returns summed journal entry debits/credits for SALES and PURCHASE
 // vouchers for a company. These are used to inject purchase/sales directly into the P&L when
 // ledgers may not be properly mapped to Purchase/Sales account groups.
-// Only EXPENSE-classified ledger debits are counted for PURCHASE (excludes GST input, stock asset
-// debits, etc.) and only INCOME/REVENUE-classified ledger credits are counted for SALES, so that
-// balance-sheet-only entries don't pollute the P&L calculation.
+// For PURCHASE, all non-LIABILITY/non-EQUITY debits are counted (includes GST input assets)
+// so that the total expense reflects the GST-inclusive purchase cost. For SALES, only
+// INCOME/REVENUE credits are counted to avoid balance-sheet entries polluting the P&L.
 func GetCompanyVoucherTotals(ctx context.Context, organizationID string) (map[string]*VoucherTypeTotals, error) {
 	query := `
 		SELECT
 			vt.parent_base_type,
 			COALESCE(SUM(CASE
-				WHEN vt.parent_base_type = 'PURCHASE' AND ag.classification = 'EXPENSE' THEN je.debit
+				WHEN vt.parent_base_type = 'PURCHASE' AND ag.classification NOT IN ('LIABILITY', 'EQUITY') THEN je.debit
 				ELSE 0
 			END), 0) AS total_debit,
 			COALESCE(SUM(CASE

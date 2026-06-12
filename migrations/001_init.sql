@@ -117,6 +117,38 @@ CREATE TABLE IF NOT EXISTS public.voucher_types (
     parent_base_type VARCHAR
 );
 
+-- companies
+CREATE TABLE IF NOT EXISTS public.companies (
+    company_id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name                 VARCHAR(150),
+    legal_name           VARCHAR,
+    tax_identifier       VARCHAR,
+    base_currency        VARCHAR(3) DEFAULT 'INR',
+    alias                VARCHAR,
+    account_number       VARCHAR,
+    ifsc_code            VARCHAR,
+    bank_name            VARCHAR,
+    branch               VARCHAR,
+    bsr_code             VARCHAR,
+    pan_number           VARCHAR,
+    type_of_registration VARCHAR,
+    mailing_name         VARCHAR,
+    address              TEXT,
+    state                VARCHAR,
+    country              VARCHAR,
+    pin_code             VARCHAR,
+    created_at           TIMESTAMPTZ DEFAULT NOW(),
+    updated_at           TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- organization_to_company
+CREATE TABLE IF NOT EXISTS public.organization_to_company (
+    mapping_id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES public.organizations(organization_id) ON DELETE CASCADE,
+    company_id      UUID NOT NULL REFERENCES public.companies(company_id) ON DELETE CASCADE,
+    UNIQUE (organization_id, company_id)
+);
+
 -- ledgers
 CREATE TABLE IF NOT EXISTS public.ledgers (
     ledger_id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

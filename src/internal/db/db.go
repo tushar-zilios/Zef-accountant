@@ -238,6 +238,41 @@ func InitDB(ctx context.Context, dbURL string) (*pgxpool.Pool, error) {
 			logger.LogDB("Warning: failed to drop CTO tables from main DB: %v", execErrDropCTO)
 		}
 
+		// Create companies and organization_to_company tables if missing
+		_, execErrCompanies := pool.Exec(ctx, `
+			CREATE TABLE IF NOT EXISTS public.companies (
+				company_id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				name                 VARCHAR(150),
+				legal_name           VARCHAR,
+				tax_identifier       VARCHAR,
+				base_currency        VARCHAR(3) DEFAULT 'INR',
+				alias                VARCHAR,
+				account_number       VARCHAR,
+				ifsc_code            VARCHAR,
+				bank_name            VARCHAR,
+				branch               VARCHAR,
+				bsr_code             VARCHAR,
+				pan_number           VARCHAR,
+				type_of_registration VARCHAR,
+				mailing_name         VARCHAR,
+				address              TEXT,
+				state                VARCHAR,
+				country              VARCHAR,
+				pin_code             VARCHAR,
+				created_at           TIMESTAMPTZ DEFAULT NOW(),
+				updated_at           TIMESTAMPTZ DEFAULT NOW()
+			);
+			CREATE TABLE IF NOT EXISTS public.organization_to_company (
+				mapping_id      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+				organization_id UUID NOT NULL REFERENCES public.organizations(organization_id) ON DELETE CASCADE,
+				company_id      UUID NOT NULL REFERENCES public.companies(company_id) ON DELETE CASCADE,
+				UNIQUE (organization_id, company_id)
+			);
+		`)
+		if execErrCompanies != nil {
+			logger.LogDB("Warning: failed to create companies/organization_to_company tables: %v", execErrCompanies)
+		}
+
 		// RBAC: scope role assignments to workspace/org
 		_, execErr10 := pool.Exec(ctx, `
 			ALTER TABLE public.roles_to_users
