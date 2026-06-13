@@ -14,7 +14,7 @@ import (
 
 func handlerLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
+		if r.URL.Path == "/health" || strings.HasSuffix(r.URL.Path, "/health") || strings.HasSuffix(r.URL.Path, "/health/") {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -30,7 +30,7 @@ func handlerLogger(next http.Handler) http.Handler {
 func conditionalLogger(next http.Handler) http.Handler {
 	loggerMW := middleware.Logger(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/health" {
+		if r.URL.Path == "/health" || strings.HasSuffix(r.URL.Path, "/health") || strings.HasSuffix(r.URL.Path, "/health/") {
 			next.ServeHTTP(w, r)
 			return
 		}
