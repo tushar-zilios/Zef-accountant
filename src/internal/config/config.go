@@ -11,6 +11,7 @@ type Config struct {
 	DatabaseURL string
 	Port        string
 	JWTSecret   string
+	BackendURL  string
 }
 
 func Load() (*Config, error) {
@@ -31,9 +32,15 @@ func Load() (*Config, error) {
 		jwtSecret = "zef-super-secret-jwt-key-change-in-production"
 	}
 
+	backendURL := os.Getenv("BACKEND_URL")
+	if backendURL == "" {
+		backendURL = "http://localhost:" + port
+	}
+
 	return &Config{
 		DatabaseURL: dbURL,
 		Port:        port,
 		JWTSecret:   jwtSecret,
+		BackendURL:  backendURL,
 	}, nil
 }
